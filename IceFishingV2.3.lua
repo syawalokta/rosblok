@@ -780,6 +780,30 @@ local Window = WindUI:CreateWindow({
     Author = "by oktodev"
 })
 
+-- settings
+local ConfigManager = Window.ConfigManager
+local Config = ConfigManager:Config("Default", true)
+
+local SettingsTab = Window:Tab({
+    Title = "Settings",
+    Icon = "settings"
+})
+
+SettingsTab:Keybind({
+    Flag = "MenuKeybind",
+    Title = "GUI Keybind",
+    Desc = "Tombol untuk menampilkan / menyembunyikan UI",
+    Value = "RightControl",
+
+    Callback = function(value)
+        local keyCode = Enum.KeyCode[value]
+
+        if keyCode then
+            Window:SetToggleKey(keyCode)
+        end
+    end
+})
+
 -- Main tab
 local MainTab = Window:Tab({
     Title = "Auto Catch",
@@ -1210,27 +1234,6 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
-
---keybin
-local SettingsTab = Window:Tab({
-    Title = "Settings",
-    Icon = "settings"
-})
-
-SettingsTab:Keybind({
-    Flag = "MenuKeybind",
-    Title = "GUI Keybind",
-    Desc = "Tombol untuk membuka / menyembunyikan UI",
-    Value = "RightControl",
-
-    Callback = function(value)
-        local keyCode = Enum.KeyCode[value]
-
-        if keyCode then
-            Window:SetToggleKey(keyCode)
-        end
-    end
-})
 
 -- Character respawn
 player.CharacterAdded:Connect(function()
