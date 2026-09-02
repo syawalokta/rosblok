@@ -7,14 +7,12 @@ local WindUI = loadstring(game:HttpGet(
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local PathfindingService = game:GetService("PathfindingService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 -- Config
 local autoCatchEnabled = false
-local autoSellEnabled = false
 local autoRestart = true
 
 local inMinigame = false
@@ -26,12 +24,6 @@ local hitMargin = 12
 
 local clickX = 800
 local clickY = 300
-
-local sellProcessing = false
-local returnPosition = nil
-
-local sellDistance = 7
-local coolerDistance = 7
 
 local StatusText
 
@@ -72,8 +64,11 @@ local function getNearestFishingPrompt()
     for _, desc in ipairs(workspace:GetDescendants()) do
         if desc:IsA("ProximityPrompt") then
 
-            local objectText = string.lower(desc.ObjectText or "")
-            local actionText = string.lower(desc.ActionText or "")
+            local objectText =
+                string.lower(desc.ObjectText or "")
+
+            local actionText =
+                string.lower(desc.ActionText or "")
 
             local parent = desc.Parent
 
@@ -90,6 +85,7 @@ local function getNearestFishingPrompt()
 
                     if parent:IsA("BasePart") then
                         partPos = parent.Position
+
                     elseif parent:IsA("Attachment") then
                         partPos = parent.WorldPosition
                     end
@@ -173,7 +169,7 @@ local function pressGuiButton(btn)
             1
         )
 
-        task.wait()
+        task.wait(0.01)
 
         VirtualInputManager:SendMouseButtonEvent(
             pos.X,
@@ -223,554 +219,11 @@ local function interactPrompt(prompt)
     return success
 end
 
--- Get prompt position
-local function getPromptPosition(prompt)
-    if not prompt then
-        return nil
-    end
-
-    local parent = prompt.Parent
-
-    if not parent then
-        return nil
-    end
-
-    if parent:IsA("Attachment") then
-        return parent.WorldPosition
-    end
-
-    if parent:IsA("BasePart") then
-        return parent.Position
-    end
-
-    local model = parent:FindFirstAncestorOfClass("Model")
-
-    if model then
-        local part =
-            model.PrimaryPart
-            or model:FindFirstChildWhichIsA("BasePart", true)
-
-        if part then
-            return part.Position
-        end
-    end
-
-    return nil
-end
-
--- Find nearest Reti Cooler
-local function getNearestRetiCooler()
-    local char = player.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-
-    if not hrp then
-        return nil, nil, nil
-    end
-
-    local nearestCooler = nil
-    local nearestPickup = nil
-    local nearestPosition = nil
-
-    local shortestDist = math.huge
-    local checked = {}
-
-    for _, obj in ipairs(workspace:GetDescendants()) do
-
-        if obj.Name == "Reti Cooler"
-            and obj:IsA("Model")
-            and not checked[obj]
-        then
-
-            checked[obj] = true
-
-            local main =
-                obj:FindFirstChild("Main", true)
-
-            local pickup
-
-            if main then
-                pickup =
-                    main:FindFirstChild("PickUp", true)
-            end
-
-            if not pickup then
-                pickup =
-                    obj:FindFirstChild("PickUp", true)
-            end
-
-            if pickup
-                and pickup:IsA("ProximityPrompt")
-            then
-
-                local position =
-                    getPromptPosition(pickup)
-
-                if position then
-
-                    local distance =
-                        (hrp.Position - position).Magnitude
-
-                    if distance < shortestDist then
-
-                        shortestDist = distance
-                        nearestCooler = obj
-                        nearestPickup = pickup
-                        nearestPosition = position
-
-                    end
-                end
-            end
-        end
-    end
-
-    return nearestCooler, nearestPickup, nearestPosition
-end
-
--- Pathfinding
-local function walkTo(targetPosition, maxDistance)
-    if not targetPosition then
-        return false
-    end
-
-    local char = player.Character
-    local humanoid =
-        char and char:FindFirstChildOfClass("Humanoid")
-
-    local hrp =
-        char and char:FindFirstChild("HumanoidRootPart")
-
-    if not humanoid or not hrp then
-        return false
-    end
-
-    if (hrp.Position - targetPosition).Magnitude <= (maxDistance or 5) then
-        return true
-    end
-
-    local path = PathfindingService:CreatePath({
-        AgentRadius = 2,
-        AgentHeight = 5,
-        AgentCanJump = true,
-        WaypointSpacing = 4
-    })
-
-    local success = pcall(function()
-        path:ComputeAsync(
-            hrp.Position,
-            targetPosition
-        )
-    end)
-
-    if not success then
-        return false
-    end
-
-    if path.Status ~= Enum.PathStatus.Success then
-        return false
-    end
-
-    local waypoints = path:GetWaypoints()
-
-    for _, waypoint in ipairs(waypoints) do
-
-        if not autoSellEnabled
-            or not autoCatchEnabled
-        then
-            return false
-        end
-
-        if waypoint.Action == Enum.PathWaypointAction.Jump then
-            humanoid.Jump = true
-        end
-
-        humanoid:MoveTo(waypoint.Position)
-
-        local reached = humanoid.MoveToFinished:Wait()
-
-        if not reached then
-            return false
-        end
-
-        if (hrp.Position - targetPosition).Magnitude
-            <= (maxDistance or 5)
-        then
-            return true
-        end
-    end
-
-    return (
-        hrp.Position - targetPosition
-    ).Magnitude <= (maxDistance or 5)
-end
-
--- Detect Pendingin Penuh
-local function isCoolerFull()
-    for _, obj in ipairs(playerGui:GetDescendants()) do
-
-        if obj:IsA("TextLabel")
-            or obj:IsA("TextButton")
-            or obj:IsA("TextBox")
-        then
-
-            local text = string.lower(obj.Text or "")
-
-            if text:find(
-                "pendingin penuh",
-                1,
-                true
-            ) then
-                return true
-            end
-        end
-    end
-
-    return false
-end
-
--- Find Sell Everything
-local function getSellEverythingButton()
-    local dialogue =
-        playerGui:FindFirstChild(
-            "DialogueBillboard"
-        )
-
-    if not dialogue then
-        return nil
-    end
-
-    local main =
-        dialogue:FindFirstChild(
-            "Main",
-            true
-        )
-
-    if not main then
-        return nil
-    end
-
-    local mainCol =
-        main:FindFirstChild(
-            "MainCol",
-            true
-        )
-
-    if not mainCol then
-        return nil
-    end
-
-    local options =
-        mainCol:FindFirstChild(
-            "Options",
-            true
-        )
-
-    if not options then
-        return nil
-    end
-
-    local button =
-        options:FindFirstChild(
-            "Sell Everything"
-        )
-
-    if button then
-        return button
-    end
-
-    for _, obj in ipairs(options:GetDescendants()) do
-
-        if obj:IsA("TextButton")
-            or obj:IsA("ImageButton")
-        then
-
-            if obj.Name == "Sell Everything"
-                or obj.Text == "Sell Everything"
-            then
-                return obj
-            end
-        end
-    end
-
-    return nil
-end
-
--- Get SellPart
-local function getSellPart()
-    local fishMarket =
-        workspace:FindFirstChild("FishMarket")
-
-    if not fishMarket then
-        return nil
-    end
-
-    return fishMarket:FindFirstChild(
-        "SellPart",
-        true
-    )
-end
-
--- Sell everything
-local function sellEverything()
-    local timeout = os.clock() + 5
-
-    while os.clock() < timeout do
-
-        local button =
-            getSellEverythingButton()
-
-        if button then
-
-            local success =
-                pressGuiButton(button)
-
-            if success then
-                return true
-            end
-        end
-
-        task.wait(0.1)
-    end
-
-    return false
-end
-
--- Check if cooler is being carried
-local function isCoolerCarried()
-    local char = player.Character
-
-    if not char then
-        return false
-    end
-
-    for _, obj in ipairs(char:GetDescendants()) do
-
-        if obj.Name == "Reti Cooler" then
-            return true
-        end
-    end
-
-    return false
-end
-
 -- Reset minigame
 local function resetMinigameState()
     inMinigame = false
     wasInsidePerfect = false
     lastClick = 0
-end
-
--- Start fishing
-local function startFishing()
-    if not autoCatchEnabled then
-        return
-    end
-
-    local prompt =
-        getNearestFishingPrompt()
-
-    if prompt then
-
-        updateStatus("Fishing...")
-
-        interactPrompt(prompt)
-
-    else
-
-        updateStatus(
-            "Spot mancing tidak ditemukan"
-        )
-
-        kirimNotif(
-            "Kamu tidak berada di spot mancing!"
-        )
-    end
-end
-
--- Auto sell
-local function performAutoSell()
-    if sellProcessing then
-        return
-    end
-
-    if not autoSellEnabled
-        or not autoCatchEnabled
-    then
-        return
-    end
-
-    sellProcessing = true
-
-    local char = player.Character
-    local hrp =
-        char and char:FindFirstChild("HumanoidRootPart")
-
-    if not hrp then
-        sellProcessing = false
-        return
-    end
-
-    returnPosition = hrp.Position
-
-    updateStatus("Mencari Reti Cooler...")
-
-    local cooler, pickup, coolerPosition =
-        getNearestRetiCooler()
-
-    if not cooler
-        or not pickup
-        or not coolerPosition
-    then
-
-        updateStatus(
-            "Reti Cooler tidak ditemukan"
-        )
-
-        kirimNotif(
-            "Reti Cooler tidak ditemukan."
-        )
-
-        sellProcessing = false
-        return
-    end
-
-    updateStatus("Menuju Reti Cooler...")
-
-    local reachedCooler =
-        walkTo(
-            coolerPosition,
-            coolerDistance
-        )
-
-    if not reachedCooler then
-
-        updateStatus(
-            "Gagal menuju Reti Cooler"
-        )
-
-        sellProcessing = false
-        return
-    end
-
-    if not autoSellEnabled
-        or not autoCatchEnabled
-    then
-        sellProcessing = false
-        return
-    end
-
-    updateStatus("Mengambil Reti Cooler...")
-
-    interactPrompt(pickup)
-
-    task.wait(0.25)
-
-    if not isCoolerCarried() then
-        task.wait(0.5)
-    end
-
-    local sellPart = getSellPart()
-
-    if not sellPart then
-
-        updateStatus(
-            "SellPart tidak ditemukan"
-        )
-
-        kirimNotif(
-            "Workspace.FishMarket.SellPart tidak ditemukan."
-        )
-
-        sellProcessing = false
-        return
-    end
-
-    updateStatus("Menuju tempat jual...")
-
-    local sellPosition =
-        sellPart.Position
-
-    local reachedSell =
-        walkTo(
-            sellPosition,
-            sellDistance
-        )
-
-    if not reachedSell then
-
-        updateStatus(
-            "Gagal menuju tempat jual"
-        )
-
-        sellProcessing = false
-        return
-    end
-
-    updateStatus("Menjual ikan...")
-
-    task.wait(0.2)
-
-    local sold =
-        sellEverything()
-
-    if sold then
-
-        updateStatus("Berhasil menjual")
-
-        task.wait(0.5)
-
-    else
-
-        updateStatus(
-            "Tombol Sell Everything tidak ditemukan"
-        )
-
-        kirimNotif(
-            "Sell Everything tidak ditemukan."
-        )
-
-        sellProcessing = false
-        return
-    end
-
-    if not autoSellEnabled
-        or not autoCatchEnabled
-    then
-        sellProcessing = false
-        return
-    end
-
-    task.wait(0.5)
-
-    if returnPosition then
-
-        updateStatus(
-            "Kembali ke spot mancing..."
-        )
-
-        walkTo(
-            returnPosition,
-            7
-        )
-    end
-
-    task.wait(0.35)
-
-    sellProcessing = false
-
-    if autoCatchEnabled then
-        updateStatus("Fishing...")
-
-        local prompt =
-            getNearestFishingPrompt()
-
-        if prompt then
-            interactPrompt(prompt)
-        else
-            updateStatus(
-                "Spot mancing tidak ditemukan"
-            )
-        end
-    end
 end
 
 -- Window
@@ -780,7 +233,7 @@ local Window = WindUI:CreateWindow({
     Author = "by oktodev"
 })
 
--- settings
+-- Settings
 local SettingsTab = Window:Tab({
     Title = "Settings",
     Icon = "settings"
@@ -800,7 +253,7 @@ SettingsTab:Keybind({
     end
 })
 
--- Main tab
+-- Auto Catch
 local MainTab = Window:Tab({
     Title = "Auto Catch",
     Icon = "fish"
@@ -817,9 +270,8 @@ MainTab:Toggle({
         if not state then
 
             autoCatchEnabled = false
-            inMinigame = false
-            wasInsidePerfect = false
-            lastClick = 0
+
+            resetMinigameState()
 
             updateStatus("OFF")
 
@@ -835,6 +287,8 @@ MainTab:Toggle({
 
         if not prompt then
 
+            autoCatchEnabled = false
+
             updateStatus(
                 "Tidak berada di spot mancing"
             )
@@ -848,8 +302,7 @@ MainTab:Toggle({
 
         autoCatchEnabled = true
 
-        wasInsidePerfect = false
-        lastClick = 0
+        resetMinigameState()
 
         updateStatus("ON")
 
@@ -871,40 +324,6 @@ MainTab:Toggle({
             end
 
         end)
-    end
-})
-
--- Auto Sell
-MainTab:Toggle({
-    Title = "Auto Sell",
-    Desc = "Ambil Reti Cooler saat penuh lalu jual ikan",
-    Value = false,
-
-    Callback = function(state)
-
-        autoSellEnabled = state
-
-        if state then
-
-            kirimNotif(
-                "Auto Sell diaktifkan."
-            )
-
-            if isCoolerFull()
-                and autoCatchEnabled
-            then
-
-                task.spawn(
-                    performAutoSell
-                )
-            end
-
-        else
-
-            kirimNotif(
-                "Auto Sell dimatikan."
-            )
-        end
     end
 })
 
@@ -1030,23 +449,6 @@ RunService.RenderStepped:Connect(function()
         return
     end
 
-    -- Auto Sell trigger
-    if autoSellEnabled
-        and not sellProcessing
-        and isCoolerFull()
-    then
-
-        task.spawn(
-            performAutoSell
-        )
-
-        return
-    end
-
-    if sellProcessing then
-        return
-    end
-
     local fishGui =
         playerGui:FindFirstChild(
             "FishGameTemplate"
@@ -1054,7 +456,9 @@ RunService.RenderStepped:Connect(function()
 
     local main =
         fishGui
-        and fishGui:FindFirstChild("Main")
+        and fishGui:FindFirstChild(
+            "Main"
+        )
 
     local targetFrame =
         main
@@ -1114,7 +518,6 @@ RunService.RenderStepped:Connect(function()
 
             local now = tick()
 
-            -- Baru masuk Perfect
             if isOverlap then
 
                 if not wasInsidePerfect
@@ -1177,53 +580,45 @@ RunService.RenderStepped:Connect(function()
                     )
                 end
 
-                task.wait(0.35)
-
-                -- Kalau Auto Sell aktif dan
-                -- pendingin sudah penuh,
-                -- biarkan Auto Sell menangani.
-                if autoSellEnabled
-                    and isCoolerFull()
-                then
+                if not autoRestart then
 
                     updateStatus(
-                        "Pendingin penuh"
+                        "Selesai"
                     )
 
                     return
                 end
 
-                -- Mancing lagi
-                if autoCatchEnabled
-                    and autoRestart
-                then
+                task.wait(0.35)
 
-                    local prompt =
-                        getNearestFishingPrompt()
+                if not autoCatchEnabled then
+                    return
+                end
 
-                    if prompt then
+                local prompt =
+                    getNearestFishingPrompt()
 
-                        updateStatus(
-                            "Fishing..."
-                        )
+                if prompt then
 
-                        interactPrompt(
-                            prompt
-                        )
+                    updateStatus(
+                        "Fishing..."
+                    )
 
-                    else
+                    interactPrompt(
+                        prompt
+                    )
 
-                        autoCatchEnabled =
-                            false
+                else
 
-                        updateStatus(
-                            "Spot mancing tidak ditemukan"
-                        )
+                    autoCatchEnabled = false
 
-                        kirimNotif(
-                            "Kamu tidak berada di spot mancing!"
-                        )
-                    end
+                    updateStatus(
+                        "Spot mancing tidak ditemukan"
+                    )
+
+                    kirimNotif(
+                        "Kamu tidak berada di spot mancing!"
+                    )
                 end
 
             end)
@@ -1234,10 +629,15 @@ end)
 -- Character respawn
 player.CharacterAdded:Connect(function()
 
-    inMinigame = false
-    wasInsidePerfect = false
-    lastClick = 0
-    sellProcessing = false
+    resetMinigameState()
+
+    if autoCatchEnabled then
+        updateStatus(
+            "Menunggu karakter..."
+        )
+    else
+        updateStatus("OFF")
+    end
 
 end)
 
