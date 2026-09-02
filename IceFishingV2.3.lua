@@ -1211,6 +1211,27 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+--keybin
+local SettingsTab = Window:Tab({
+    Title = "Settings",
+    Icon = "settings"
+})
+
+SettingsTab:Keybind({
+    Flag = "MenuKeybind",
+    Title = "GUI Keybind",
+    Desc = "Tombol untuk membuka / menyembunyikan UI",
+    Value = "RightControl",
+
+    Callback = function(value)
+        local keyCode = Enum.KeyCode[value]
+
+        if keyCode then
+            Window:SetToggleKey(keyCode)
+        end
+    end
+})
+
 -- Character respawn
 player.CharacterAdded:Connect(function()
 
