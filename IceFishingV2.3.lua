@@ -781,16 +781,12 @@ local Window = WindUI:CreateWindow({
 })
 
 -- settings
-local ConfigManager = Window.ConfigManager
-local Config = ConfigManager:Config("Default", true)
-
 local SettingsTab = Window:Tab({
     Title = "Settings",
     Icon = "settings"
 })
 
 SettingsTab:Keybind({
-    Flag = "MenuKeybind",
     Title = "GUI Keybind",
     Desc = "Tombol untuk menampilkan / menyembunyikan UI",
     Value = "RightControl",
