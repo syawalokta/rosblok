@@ -53,6 +53,7 @@ function TpzUI.new(options)
     end
 
     self.GameName = self.GameName or getGameName()
+    setmetatable(self, { __index = TpzUI })
     self.Connections = {}
     self.Toggles = {}
     self.Sliders = {}
@@ -334,6 +335,8 @@ function TpzUI.new(options)
         self.Pages[name] = page
         return page
     end
+
+    self.Descriptions = descriptions
 
     local tabs = options.Tabs or {"Main", "Player", "Farming", "Teleport", "Settings"}
 
@@ -752,7 +755,7 @@ function TpzUI:CreateToggle(name, description, defaultState, callback, tabName)
 
     local control = {}
 
-    local function update()
+    local function update(fireCallback)
         tween(toggle, 0.15, {
             BackgroundColor3 = state and COLORS.Accent or COLORS.SliderBackground,
         }):Play()
@@ -763,14 +766,17 @@ function TpzUI:CreateToggle(name, description, defaultState, callback, tabName)
                 or UDim2.new(0, 3, 0.5, 0),
         }):Play()
 
-        if callback then
-            callback(state)
+        if fireCallback ~= false then
+            local fn = control.Callback or callback
+            if fn then
+                fn(state)
+            end
         end
     end
 
     connect(toggle.MouseButton1Click, function()
         state = not state
-        update()
+        update(true)
     end)
 
     function control:Get()
@@ -790,8 +796,11 @@ function TpzUI:CreateToggle(name, description, defaultState, callback, tabName)
                 or UDim2.new(0, 3, 0.5, 0),
         }):Play()
 
-        if fireCallback ~= false and callback then
-            callback(state)
+        if fireCallback ~= false then
+            local fn = control.Callback or callback
+            if fn then
+                fn(state)
+            end
         end
     end
 
@@ -802,7 +811,7 @@ function TpzUI:CreateToggle(name, description, defaultState, callback, tabName)
     self.Toggles[name] = control
     control.Instance = container
 
-    update()
+    update(false)
 
     return control
 end
@@ -813,11 +822,7 @@ function TpzUI:OnToggle(name, callback)
         return false
     end
 
-    local current = toggle:Get()
-
     toggle.Callback = callback
-    toggle:Set(current, false)
-
     return true
 end
 
