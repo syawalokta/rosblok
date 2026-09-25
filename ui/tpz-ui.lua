@@ -14,7 +14,8 @@ if oldGui then
 end
 
 -- config
-local GAME_NAME = "Backstreet survival: enchanted"
+
+local GAME_NAME = "YOUR GAME"
 
 local COLORS = {
     Background = Color3.fromRGB(17, 19, 22),
@@ -32,9 +33,12 @@ local COLORS = {
     AccentSoft = Color3.fromRGB(76, 103, 130),
 
     SliderBackground = Color3.fromRGB(54, 58, 64),
+
+    Notification = Color3.fromRGB(20, 22, 25),
 }
 
 -- state
+
 local gui = Instance.new("ScreenGui")
 gui.Name = "TpzHub_UI"
 gui.ResetOnSpawn = false
@@ -47,6 +51,7 @@ local minimized = false
 local currentTab = "Main"
 
 -- utility
+
 local function connect(signal, callback)
     local connection = signal:Connect(callback)
     table.insert(connections, connection)
@@ -94,11 +99,12 @@ local function tween(object, duration, properties)
 end
 
 -- main window
+
 local window = create("Frame", {
     Name = "Window",
     AnchorPoint = Vector2.new(0.5, 0.5),
     Position = UDim2.fromScale(0.5, 0.5),
-    Size = UDim2.new(0, 570, 0, 410),
+    Size = UDim2.new(0, 570, 0, 430),
     BackgroundColor3 = COLORS.Background,
     BorderSizePixel = 0,
     ClipsDescendants = true,
@@ -108,6 +114,7 @@ addCorner(window, 14)
 addStroke(window, COLORS.Border, 0.18)
 
 -- responsive
+
 local function updateWindowSize()
     local camera = workspace.CurrentCamera
 
@@ -122,10 +129,10 @@ local function updateWindowSize()
             0.93,
             0,
             0,
-            math.clamp(viewport.Y * 0.72, 340, 500)
+            math.clamp(viewport.Y * 0.76, 350, 520)
         )
     else
-        window.Size = UDim2.new(0, 570, 0, 410)
+        window.Size = UDim2.new(0, 570, 0, 430)
     end
 end
 
@@ -137,6 +144,7 @@ connect(
 )
 
 -- header
+
 local header = create("Frame", {
     Name = "Header",
     Size = UDim2.new(1, 0, 0, 68),
@@ -144,7 +152,6 @@ local header = create("Frame", {
     BorderSizePixel = 0,
 }, window)
 
--- header divider
 create("Frame", {
     Name = "Divider",
     Position = UDim2.new(0, 16, 1, -1),
@@ -154,7 +161,8 @@ create("Frame", {
 }, header)
 
 -- logo
-local logo = create("ImageLabel", {
+
+create("ImageLabel", {
     Name = "Logo",
     Position = UDim2.new(0, 18, 0.5, 0),
     AnchorPoint = Vector2.new(0, 0.5),
@@ -165,6 +173,7 @@ local logo = create("ImageLabel", {
 }, header)
 
 -- title
+
 create("TextLabel", {
     Name = "Title",
     Position = UDim2.new(0, 67, 0, 12),
@@ -190,6 +199,7 @@ create("TextLabel", {
 }, header)
 
 -- status
+
 create("TextLabel", {
     Name = "Status",
     AnchorPoint = Vector2.new(1, 0.5),
@@ -204,6 +214,7 @@ create("TextLabel", {
 }, header)
 
 -- minimize
+
 local minimizeButton = create("TextButton", {
     Name = "Minimize",
     AnchorPoint = Vector2.new(1, 0.5),
@@ -221,6 +232,7 @@ local minimizeButton = create("TextButton", {
 addCorner(minimizeButton, 9)
 
 -- close
+
 local closeButton = create("TextButton", {
     Name = "Close",
     AnchorPoint = Vector2.new(1, 0.5),
@@ -238,6 +250,7 @@ local closeButton = create("TextButton", {
 addCorner(closeButton, 9)
 
 -- body
+
 local body = create("Frame", {
     Name = "Body",
     Position = UDim2.new(0, 0, 0, 68),
@@ -247,6 +260,7 @@ local body = create("Frame", {
 }, window)
 
 -- navigation
+
 local navigation = create("Frame", {
     Name = "Navigation",
     Position = UDim2.new(0, 12, 0, 12),
@@ -271,6 +285,7 @@ create("UIListLayout", {
 }, navigation)
 
 -- content
+
 local content = create("Frame", {
     Name = "Content",
     Position = UDim2.new(0, 154, 0, 12),
@@ -283,6 +298,7 @@ addCorner(content, 12)
 addStroke(content, COLORS.Border, 0.35)
 
 -- content header
+
 local contentTitle = create("TextLabel", {
     Name = "Title",
     Position = UDim2.new(0, 19, 0, 16),
@@ -308,6 +324,7 @@ local contentDescription = create("TextLabel", {
 }, content)
 
 -- scroll
+
 local scroll = create("ScrollingFrame", {
     Name = "Scroll",
     Position = UDim2.new(0, 14, 0, 72),
@@ -333,6 +350,7 @@ create("UIListLayout", {
 }, scroll)
 
 -- section
+
 local function createSection(text)
     return create("TextLabel", {
         Size = UDim2.new(1, 0, 0, 20),
@@ -346,6 +364,7 @@ local function createSection(text)
 end
 
 -- toggle
+
 local function createToggle(text, description, default)
     local state = default or false
 
@@ -432,6 +451,7 @@ local function createToggle(text, description, default)
 end
 
 -- slider
+
 local function createSlider(text, description, minimum, maximum, default)
     local value = default or minimum
 
@@ -486,13 +506,10 @@ local function createSlider(text, description, minimum, maximum, default)
 
     addCorner(sliderArea, 5)
 
+    local normalized = (value - minimum) / (maximum - minimum)
+
     local fill = create("Frame", {
-        Size = UDim2.new(
-            (value - minimum) / (maximum - minimum),
-            0,
-            1,
-            0
-        ),
+        Size = UDim2.new(normalized, 0, 1, 0),
         BackgroundColor3 = COLORS.Accent,
         BorderSizePixel = 0,
     }, sliderArea)
@@ -501,12 +518,7 @@ local function createSlider(text, description, minimum, maximum, default)
 
     local knob = create("Frame", {
         AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(
-            (value - minimum) / (maximum - minimum),
-            0,
-            0.5,
-            0
-        ),
+        Position = UDim2.new(normalized, 0, 0.5, 0),
         Size = UDim2.new(0, 15, 0, 15),
         BackgroundColor3 = COLORS.Text,
         BorderSizePixel = 0,
@@ -517,6 +529,10 @@ local function createSlider(text, description, minimum, maximum, default)
     local draggingSlider = false
 
     local function updateFromPosition(position)
+        if sliderArea.AbsoluteSize.X <= 0 then
+            return
+        end
+
         local relative = math.clamp(
             position.X - sliderArea.AbsolutePosition.X,
             0,
@@ -524,25 +540,15 @@ local function createSlider(text, description, minimum, maximum, default)
         )
 
         local percentage = relative / sliderArea.AbsoluteSize.X
+
         value = math.floor(
             minimum + ((maximum - minimum) * percentage) + 0.5
         )
 
-        local normalized = (value - minimum) / (maximum - minimum)
+        local current = (value - minimum) / (maximum - minimum)
 
-        fill.Size = UDim2.new(
-            normalized,
-            0,
-            1,
-            0
-        )
-
-        knob.Position = UDim2.new(
-            normalized,
-            0,
-            0.5,
-            0
-        )
+        fill.Size = UDim2.new(current, 0, 1, 0)
+        knob.Position = UDim2.new(current, 0, 0.5, 0)
 
         valueLabel.Text = tostring(value)
     end
@@ -579,7 +585,124 @@ local function createSlider(text, description, minimum, maximum, default)
     return container
 end
 
--- button
+-- text area
+
+local function createTextArea(titleText, placeholder)
+    local container = create("Frame", {
+        Size = UDim2.new(1, 0, 0, 125),
+        BackgroundColor3 = COLORS.Secondary,
+        BorderSizePixel = 0,
+    }, scroll)
+
+    addCorner(container, 11)
+
+    create("TextLabel", {
+        Position = UDim2.new(0, 13, 0, 10),
+        Size = UDim2.new(1, -26, 0, 18),
+        BackgroundTransparency = 1,
+        Text = titleText,
+        Font = Enum.Font.GothamMedium,
+        TextSize = 12,
+        TextColor3 = COLORS.Text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, container)
+
+    local textBox = create("TextBox", {
+        Position = UDim2.new(0, 12, 0, 34),
+        Size = UDim2.new(1, -24, 1, -45),
+        BackgroundColor3 = COLORS.Panel,
+        BorderSizePixel = 0,
+        Text = "",
+        PlaceholderText = placeholder or "",
+        PlaceholderColor3 = COLORS.Muted,
+        TextColor3 = COLORS.TextSoft,
+        Font = Enum.Font.Code,
+        TextSize = 10,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Top,
+        TextWrapped = true,
+        ClearTextOnFocus = false,
+        MultiLine = true,
+        ScrollBarThickness = 2,
+        ScrollBarImageColor3 = COLORS.Border,
+    }, container)
+
+    addCorner(textBox, 8)
+
+    return textBox
+end
+
+-- dummy content
+
+createSection("General")
+
+createToggle(
+    "Auto Farm",
+    "Automatically perform the selected farming action.",
+    false
+)
+
+createToggle(
+    "Auto Collect",
+    "Collect nearby resources automatically.",
+    true
+)
+
+createToggle(
+    "Anti AFK",
+    "Prevent the client from becoming idle.",
+    false
+)
+
+createSection("Movement")
+
+createSlider(
+    "Walk Speed",
+    "Adjust the player's movement speed.",
+    16,
+    100,
+    16
+)
+
+createSlider(
+    "Jump Power",
+    "Adjust the player's jump strength.",
+    50,
+    150,
+    50
+)
+
+createSection("Logs / Statistics")
+
+local logBox = createTextArea(
+    "Live Logs",
+    "Logs, statistics, status information..."
+)
+
+logBox.Text = "system initialized\nwaiting for activity..."
+
+-- log helpers
+
+local function setLogText(text)
+    logBox.Text = tostring(text)
+end
+
+local function appendLog(text)
+    local current = logBox.Text
+
+    if current == "" then
+        logBox.Text = tostring(text)
+    else
+        logBox.Text = current .. "\n" .. tostring(text)
+    end
+
+    task.defer(function()
+        logBox.CursorPosition = #logBox.Text + 1
+    end)
+end
+
+-- buttons
+
 local function createButton(text, description)
     local button = create("TextButton", {
         Size = UDim2.new(1, 0, 0, 49),
@@ -640,52 +763,121 @@ local function createButton(text, description)
     return button
 end
 
--- notification system
+-- notifications
+
 local notificationHolder = create("Frame", {
     Name = "Notifications",
     AnchorPoint = Vector2.new(1, 1),
     Position = UDim2.new(1, -18, 1, -18),
-    Size = UDim2.new(0, 310, 0, 300),
+    Size = UDim2.new(0, 320, 0, 300),
     BackgroundTransparency = 1,
 }, gui)
 
-create("UIListLayout", {
+local notificationLayout = create("UIListLayout", {
     Padding = UDim.new(0, 8),
     VerticalAlignment = Enum.VerticalAlignment.Bottom,
     HorizontalAlignment = Enum.HorizontalAlignment.Right,
     SortOrder = Enum.SortOrder.LayoutOrder,
 }, notificationHolder)
 
+local notifications = {}
+local notificationId = 0
+local MAX_NOTIFICATIONS = 4
+
+local function removeNotification(notification)
+    for index, item in ipairs(notifications) do
+        if item == notification then
+            table.remove(notifications, index)
+            break
+        end
+    end
+
+    if notification and notification.Parent then
+        local hide = tween(notification, 0.22, {
+            Position = UDim2.new(1, 25, 0, 0),
+            BackgroundTransparency = 1,
+        })
+
+        hide:Play()
+
+        task.delay(0.23, function()
+            if notification then
+                notification:Destroy()
+            end
+        end)
+    end
+end
+
 local function notify(titleText, messageText, icon)
+    notificationId += 1
+
+    if #notifications >= MAX_NOTIFICATIONS then
+        local oldest = table.remove(notifications, 1)
+
+        if oldest and oldest.Parent then
+            local hide = tween(oldest, 0.18, {
+                Position = UDim2.new(1, 25, 0, 0),
+                BackgroundTransparency = 1,
+            })
+
+            hide:Play()
+
+            task.delay(0.19, function()
+                if oldest then
+                    oldest:Destroy()
+                end
+            end)
+        end
+    end
+
     local notification = create("Frame", {
-        Size = UDim2.new(1, 0, 0, 66),
-        BackgroundColor3 = Color3.fromRGB(18, 19, 21),
+        Name = "Notification_" .. notificationId,
+        Size = UDim2.new(1, 0, 0, 68),
+        BackgroundColor3 = COLORS.Notification,
         BackgroundTransparency = 0.02,
         BorderSizePixel = 0,
+        LayoutOrder = notificationId,
+        Position = UDim2.new(1, 30, 0, 0),
     }, notificationHolder)
 
-    addCorner(notification, 13)
-    addStroke(notification, COLORS.Border, 0.35)
+    addCorner(notification, 14)
+    addStroke(notification, COLORS.Border, 0.28)
 
-    local iconObject
+    create("Frame", {
+        Name = "Accent",
+        Position = UDim2.new(0, 0, 0, 14),
+        Size = UDim2.new(0, 3, 1, -28),
+        BackgroundColor3 = COLORS.Accent,
+        BorderSizePixel = 0,
+    }, notification)
+
+    addCorner(notification:FindFirstChild("Accent"), 2)
+
+    local iconBackground = create("Frame", {
+        Position = UDim2.new(0, 13, 0.5, 0),
+        AnchorPoint = Vector2.new(0, 0.5),
+        Size = UDim2.new(0, 34, 0, 34),
+        BackgroundColor3 = COLORS.Secondary,
+        BorderSizePixel = 0,
+    }, notification)
+
+    addCorner(iconBackground, 10)
 
     if icon then
-        iconObject = create("ImageLabel", {
-            Position = UDim2.new(0, 14, 0.5, 0),
-            AnchorPoint = Vector2.new(0, 0.5),
-            Size = UDim2.new(0, 26, 0, 26),
+        create("ImageLabel", {
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            Position = UDim2.fromScale(0.5, 0.5),
+            Size = UDim2.new(0, 20, 0, 20),
             BackgroundTransparency = 1,
             Image = icon,
             ImageColor3 = COLORS.TextSoft,
             ScaleType = Enum.ScaleType.Fit,
-        }, notification)
+        }, iconBackground)
     end
 
-    local textOffset = icon and 52 or 15
-
     create("TextLabel", {
-        Position = UDim2.new(0, textOffset, 0, 12),
-        Size = UDim2.new(1, -textOffset - 12, 0, 19),
+        Position = UDim2.new(0, 58, 0, 12),
+        Size = UDim2.new(1, -70, 0, 18),
         BackgroundTransparency = 1,
         Text = titleText,
         Font = Enum.Font.GothamMedium,
@@ -695,85 +887,31 @@ local function notify(titleText, messageText, icon)
     }, notification)
 
     create("TextLabel", {
-        Position = UDim2.new(0, textOffset, 0, 34),
-        Size = UDim2.new(1, -textOffset - 12, 0, 17),
+        Position = UDim2.new(0, 58, 0, 34),
+        Size = UDim2.new(1, -70, 0, 17),
         BackgroundTransparency = 1,
         Text = messageText,
         Font = Enum.Font.Gotham,
         TextSize = 10,
         TextColor3 = COLORS.Muted,
         TextXAlignment = Enum.TextXAlignment.Left,
+        TextTruncate = Enum.TextTruncate.AtEnd,
     }, notification)
 
-    notification.Position = UDim2.new(
-        1,
-        30,
-        0,
-        0
-    )
+    table.insert(notifications, notification)
 
-    tween(notification, 0.35, {
+    tween(notification, 0.3, {
         Position = UDim2.new(0, 0, 0, 0),
     }):Play()
 
-    task.delay(3.5, function()
-        if not notification.Parent then
-            return
+    task.delay(4, function()
+        if notification.Parent then
+            removeNotification(notification)
         end
-
-        local hideTween = tween(notification, 0.3, {
-            Position = UDim2.new(1, 30, 0, 0),
-            BackgroundTransparency = 1,
-        })
-
-        hideTween:Play()
-
-        hideTween.Completed:Wait()
-
-        notification:Destroy()
     end)
 end
 
--- dummy content
-createSection("General")
-
-createToggle(
-    "Auto Farm",
-    "Automatically perform the selected farming action.",
-    false
-)
-
-createToggle(
-    "Auto Collect",
-    "Collect nearby resources automatically.",
-    true
-)
-
-createToggle(
-    "Anti AFK",
-    "Prevent the client from becoming idle.",
-    false
-)
-
-createSection("Movement")
-
-createSlider(
-    "Walk Speed",
-    "Adjust the player's movement speed.",
-    16,
-    100,
-    16
-)
-
-createSlider(
-    "Jump Power",
-    "Adjust the player's jump strength.",
-    50,
-    150,
-    50
-)
-
-createSection("Actions")
+-- notification test
 
 local testNotification = createButton(
     "Test Notification",
@@ -799,6 +937,7 @@ createButton(
 )
 
 -- navigation
+
 local tabs = {
     "Main",
     "Player",
@@ -882,23 +1021,67 @@ end
 selectTab("Main")
 
 -- floating button
+
 local floatingButton = create("ImageButton", {
     Name = "FloatingButton",
-    AnchorPoint = Vector2.new(1, 1),
-    Position = UDim2.new(1, -18, 1, -18),
-    Size = UDim2.new(0, 50, 0, 50),
+    Position = UDim2.new(0, 24, 0, 90),
+    Size = UDim2.new(0, 52, 0, 52),
     BackgroundColor3 = COLORS.Panel,
     BorderSizePixel = 0,
     Image = "rbxassetid://85074945377894",
-    ImageTransparency = 0.05,
+    ImageTransparency = 0.03,
     Visible = false,
     AutoButtonColor = false,
 }, gui)
 
-addCorner(floatingButton, 13)
-addStroke(floatingButton, COLORS.Border, 0.2)
+addCorner(floatingButton, 14)
+addStroke(floatingButton, COLORS.Border, 0.18)
+
+-- floating button drag
+
+local floatingDragging = false
+local floatingDragStart
+local floatingStartPosition
+
+connect(floatingButton.InputBegan, function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        floatingDragging = true
+        floatingDragStart = input.Position
+        floatingStartPosition = floatingButton.Position
+    end
+end)
+
+connect(floatingButton.InputEnded, function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        floatingDragging = false
+    end
+end)
+
+connect(UserInputService.InputChanged, function(input)
+    if not floatingDragging then
+        return
+    end
+
+    if input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        local delta = input.Position - floatingDragStart
+
+        floatingButton.Position = UDim2.new(
+            floatingStartPosition.X.Scale,
+            floatingStartPosition.X.Offset + delta.X,
+            floatingStartPosition.Y.Scale,
+            floatingStartPosition.Y.Offset + delta.Y
+        )
+    end
+end)
 
 -- minimize
+
 connect(minimizeButton.MouseButton1Click, function()
     if minimized then
         return
@@ -911,12 +1094,22 @@ connect(minimizeButton.MouseButton1Click, function()
     }):Play()
 
     task.delay(0.22, function()
+        if not minimized then
+            return
+        end
+
         window.Visible = false
         floatingButton.Visible = true
     end)
 end)
 
+-- reopen
+
 connect(floatingButton.MouseButton1Click, function()
+    if floatingDragging then
+        return
+    end
+
     if not minimized then
         return
     end
@@ -928,13 +1121,14 @@ connect(floatingButton.MouseButton1Click, function()
     window.Size = UDim2.new(0, 570, 0, 68)
 
     tween(window, 0.22, {
-        Size = UDim2.new(0, 570, 0, 410),
+        Size = UDim2.new(0, 570, 0, 430),
     }):Play()
 
     task.delay(0.02, updateWindowSize)
 end)
 
 -- close
+
 connect(closeButton.MouseButton1Click, function()
     for _, connection in ipairs(connections) do
         if connection then
@@ -943,10 +1137,12 @@ connect(closeButton.MouseButton1Click, function()
     end
 
     connections = {}
+
     gui:Destroy()
 end)
 
--- drag
+-- window drag
+
 local dragging = false
 local dragStart
 local startPosition
@@ -993,6 +1189,7 @@ connect(UserInputService.InputChanged, function(input)
 end)
 
 -- open animation
+
 local originalSize = window.Size
 
 window.Size = UDim2.new(
@@ -1006,7 +1203,8 @@ tween(window, 0.3, {
     Size = originalSize,
 }):Play()
 
--- demo notification
+-- startup notification
+
 task.delay(0.7, function()
     if gui.Parent then
         notify(
