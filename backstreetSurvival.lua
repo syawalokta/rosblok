@@ -134,7 +134,7 @@ AntiAfkBtn.MouseButton1Click:Connect(function() updateToggle(AntiAfkCheck, "anti
 AutoFarmBtn.MouseButton1Click:Connect(function() updateToggle(AutoFarmCheck, "autoFarm") end)
 AutoSellBtn.MouseButton1Click:Connect(function() updateToggle(AutoSellCheck, "autoSell") end)
 
--- Anti Kick Roblox Default
+-- Anti Kick Default
 player.Idled:Connect(function()
     if states.antiAfk then
         virtualUser:CaptureController()
@@ -149,26 +149,22 @@ task.spawn(function()
     while task.wait(2) do
         if states.antiAfk then
             for _, obj in pairs(player:GetDescendants()) do
-                if obj:IsA("LocalScript") and obj.Name == "AFKScript" then
-                    if obj.Disabled == false then
-                        obj.Disabled = true 
-                        InfoLabel.Text = "🛡️ AFKScript Berhasil Dibunuh!"
-                        InfoLabel.TextColor3 = Color3.fromRGB(50, 255, 255)
-                        task.wait(1)
-                    end
+                if obj:IsA("LocalScript") and obj.Name == "AFKScript" and obj.Disabled == false then
+                    obj.Disabled = true 
+                    InfoLabel.Text = "🛡️ AFKScript Berhasil Dibunuh!"
+                    InfoLabel.TextColor3 = Color3.fromRGB(50, 255, 255)
+                    task.wait(1)
                 end
             end
             
             local character = player.Character
             if character then
                 for _, obj in pairs(character:GetDescendants()) do
-                    if obj:IsA("LocalScript") and obj.Name == "AFKScript" then
-                        if obj.Disabled == false then
-                            obj.Disabled = true
-                            InfoLabel.Text = "🛡️ AFKScript Berhasil Dibunuh!"
-                            InfoLabel.TextColor3 = Color3.fromRGB(50, 255, 255)
-                            task.wait(1)
-                        end
+                    if obj:IsA("LocalScript") and obj.Name == "AFKScript" and obj.Disabled == false then
+                        obj.Disabled = true
+                        InfoLabel.Text = "🛡️ AFKScript Berhasil Dibunuh!"
+                        InfoLabel.TextColor3 = Color3.fromRGB(50, 255, 255)
+                        task.wait(1)
                     end
                 end
             end
@@ -193,11 +189,8 @@ local function getBestTrashInStick()
     for _, trigger in ipairs(stickFolder:GetChildren()) do
         if trigger:IsA("BasePart") then
             local trashGui = trigger:FindFirstChild("TrashGui")
-            if trashGui then
-                local mythicLabel = trashGui:FindFirstChild("Mythic")
-                if mythicLabel and mythicLabel.Visible == true then
-                    return trigger, "Mythic"
-                end
+            if trashGui and trashGui:FindFirstChild("Mythic") and trashGui.Mythic.Visible then
+                return trigger, "Mythic"
             end
         end
     end
@@ -205,11 +198,8 @@ local function getBestTrashInStick()
     for _, trigger in ipairs(stickFolder:GetChildren()) do
         if trigger:IsA("BasePart") then
             local trashGui = trigger:FindFirstChild("TrashGui")
-            if trashGui then
-                local legendLabel = trashGui:FindFirstChild("Legendary")
-                if legendLabel and legendLabel.Visible == true then
-                    return trigger, "Legendary"
-                end
+            if trashGui and trashGui:FindFirstChild("Legendary") and trashGui.Legendary.Visible then
+                return trigger, "Legendary"
             end
         end
     end
@@ -228,14 +218,9 @@ end
 
 local function getShopTargetPosition()
     local deco1 = workspace:FindFirstChild("Deco1", true)
-    if deco1 and deco1:IsA("BasePart") then
-        return deco1.Position
-    end
-    
+    if deco1 and deco1:IsA("BasePart") then return deco1.Position end
     local npc = getTrashMasterNPC()
-    if npc then
-        return npc.Position
-    end
+    if npc then return npc.Position end
     return nil
 end
 
@@ -244,13 +229,8 @@ local function isInventoryFull()
         if v:IsA("TextLabel") and v.Visible then
             local current, max = string.match(v.Text, "^(%d+)%s*/%s*(%d+)$")
             if current and max then
-                local numCurrent = tonumber(current)
                 local numMax = tonumber(max)
-                if numMax > 100 then
-                    if numCurrent >= (numMax - 10) then
-                        return true
-                    end
-                end
+                if numMax > 100 and tonumber(current) >= (numMax - 10) then return true end
             end
         end
     end
@@ -334,8 +314,7 @@ local function smoothWalk(targetPos, breakCondition, stopDistance)
         end
     else
         humanoid.Jump = true
-        local randomOffset = Vector3.new(math.random(-5, 5), 0, math.random(-5, 5))
-        humanoid:MoveTo(rootPart.Position + randomOffset)
+        humanoid:MoveTo(rootPart.Position + Vector3.new(math.random(-5, 5), 0, math.random(-5, 5)))
         task.wait(0.5)
     end
 end
@@ -345,7 +324,7 @@ end
 -- ==========================================
 local isSellingPhase = false
 local sellFailCounter = 0
-local savedToolName = "" -- FITUR BARU: Tool Memory (Nginget alat lo)
+local savedToolName = "" 
 
 task.spawn(function()
     while task.wait(0.2) do
@@ -357,7 +336,6 @@ task.spawn(function()
         
         if not humanoid or not rootPart or humanoid.Health <= 0 then continue end
 
-        -- Nginget alat (Tool) yang lagi dipegang sebelum tas penuh
         local activeTool = character:FindFirstChildOfClass("Tool")
         if activeTool then
             savedToolName = activeTool.Name
@@ -383,7 +361,6 @@ task.spawn(function()
                 if dist > 4 then
                     InfoLabel.Text = "🏃 Tas Penuh! Otw Shop..."
                     InfoLabel.TextColor3 = Color3.fromRGB(255, 150, 50)
-                    
                     smoothWalk(shopTargetPos, nil, 3) 
                 else
                     humanoid:MoveTo(rootPart.Position) 
@@ -391,40 +368,22 @@ task.spawn(function()
                     InfoLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
                     
                     local prompt = npc:FindFirstChildOfClass("ProximityPrompt")
-                    if prompt and fireproximityprompt then
-                        fireproximityprompt(prompt)
-                    end
-                    
+                    if prompt and fireproximityprompt then fireproximityprompt(prompt) end
                     task.wait(1.5) 
                     
                     InfoLabel.Text = "🤑 Mencet tombol SELL ALL..."
-                    local isClicked = clickGuiButtonByText("SELL ALL")
-                    
-                    if isClicked then
+                    if clickGuiButtonByText("SELL ALL") then
                         task.wait(1) 
                         clickGuiButtonByText("X")
                         isSellingPhase = false
                         
-                        -- FITUR BARU: AUTO EQUIP CERDAS (Sesuai Memory)
                         local backpack = player:FindFirstChild("Backpack")
                         if backpack then
                             local toolToEquip = nil
-                            
-                            -- Cari dulu alat dengan nama yang udah disave
-                            if savedToolName ~= "" then
-                                toolToEquip = backpack:FindFirstChild(savedToolName)
-                            end
-                            
-                            -- Kalau gagal, baru cari Tool apapun secara random
-                            if not toolToEquip then
-                                toolToEquip = backpack:FindFirstChildOfClass("Tool")
-                            end
-                            
-                            if toolToEquip then
-                                humanoid:EquipTool(toolToEquip)
-                            end
+                            if savedToolName ~= "" then toolToEquip = backpack:FindFirstChild(savedToolName) end
+                            if not toolToEquip then toolToEquip = backpack:FindFirstChildOfClass("Tool") end
+                            if toolToEquip then humanoid:EquipTool(toolToEquip) end
                         end
-                        
                         task.wait(1)
                     else
                         sellFailCounter = sellFailCounter + 1
@@ -450,7 +409,7 @@ task.spawn(function()
             if targetPart then
                 local dist = (rootPart.Position - targetPart.Position).Magnitude
                 
-                if dist > 5 then
+                if dist > 6 then
                     if currentRarity == "Mythic" then
                         InfoLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
                     else
@@ -462,14 +421,12 @@ task.spawn(function()
                     local breakCheck = function()
                         if currentRarity == "Legendary" then
                             local _, newRarity = getBestTrashInStick()
-                            if newRarity == "Mythic" then
-                                return true 
-                            end
+                            if newRarity == "Mythic" then return true end
                         end
                         return false
                     end
                     
-                    smoothWalk(targetPart.Position, breakCheck, 4) 
+                    smoothWalk(targetPart.Position, breakCheck, 5) 
                 else
                     if currentRarity == "Mythic" then
                         InfoLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
@@ -479,37 +436,39 @@ task.spawn(function()
                     
                     InfoLabel.Text = "⛏️ Nge-loot " .. currentRarity .. "!"
                     
-                    -- FITUR BARU: LOGIKA BAK SAMPAH TINGGI (DIPERBAIKI)
-                    -- Menghitung Jarak Horizontal Aja (Ngapus hitungan Tinggi biar botnya maksa maju)
-                    local flatDist = (Vector3.new(rootPart.Position.X, 0, rootPart.Position.Z) - Vector3.new(targetPart.Position.X, 0, targetPart.Position.Z)).Magnitude
+                    -- =========================================
+                    -- FIX: MANIPULASI FISIK BAK SAMPAH TINGGI (TrashTrigger4)
+                    -- =========================================
                     local heightDiff = targetPart.Position.Y - rootPart.Position.Y
                     
-                    if heightDiff > 1.5 or flatDist > 2 then
-                        -- Terus jalan maju paksa masuk ke dalam bak sampah
-                        humanoid:MoveTo(targetPart.Position)
+                    if heightDiff > 1 then
+                        -- Kalau target ada di atas, jangan cuma nyuruh jalan, paksa angkat badannya!
+                        InfoLabel.Text = "🧗 Manjat " .. targetPart.Name .. "..."
                         
-                        -- Kalau nempel (kecepatan lambat) ATAU targetnya ada di atas -> Spam Loncat
-                        if rootPart.AssemblyLinearVelocity.Magnitude < 2 or heightDiff > 1.5 then
+                        -- Set arah pandangan ke tempat sampah
+                        local lookAtPos = Vector3.new(targetPart.Position.X, rootPart.Position.Y, targetPart.Position.Z)
+                        rootPart.CFrame = CFrame.lookAt(rootPart.Position, lookAtPos)
+                        
+                        -- Lempar badan ke atas dan ke depan (Fling) biar gak kepentok
+                        humanoid.Jump = true
+                        rootPart.AssemblyLinearVelocity = Vector3.new(0, 50, 0) + (rootPart.CFrame.LookVector * 20)
+                        
+                        task.wait(0.3) -- Tunggu dia mendarat di dalem bak
+                        humanoid:MoveTo(targetPart.Position) -- Pastiin maju ke tengah
+                    else
+                        humanoid:MoveTo(targetPart.Position) 
+                        if rootPart.AssemblyLinearVelocity.Magnitude < 0.5 then
                             humanoid.Jump = true
                         end
-                    else
-                        -- Kalau bener-bener udah ada di titik (di dalem bak / tanah datar) baru ngerem
-                        humanoid:MoveTo(rootPart.Position) 
                     end
                     
-                    -- Sistem Equip Waktu Nge-loot (Juga pakai Memory Tool)
                     local equippedTool = character:FindFirstChildOfClass("Tool")
                     if not equippedTool then
                         local backpack = player:FindFirstChild("Backpack")
                         if backpack then
                             local toolToEquip = nil
-                            if savedToolName ~= "" then
-                                toolToEquip = backpack:FindFirstChild(savedToolName)
-                            end
-                            if not toolToEquip then
-                                toolToEquip = backpack:FindFirstChildOfClass("Tool")
-                            end
-                            
+                            if savedToolName ~= "" then toolToEquip = backpack:FindFirstChild(savedToolName) end
+                            if not toolToEquip then toolToEquip = backpack:FindFirstChildOfClass("Tool") end
                             if toolToEquip then
                                 humanoid:EquipTool(toolToEquip)
                                 task.wait(0.1)
